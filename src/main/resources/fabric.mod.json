@@ -3,23 +3,23 @@
 	"id": "fair-vanilla-easy-place",
 	"version": "${version}",
 	"name": "Fair Vanilla Easy Place",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "A client-side Litematica companion that makes schematic block placement less repetitive while preserving vanilla survival placement rules.",
 	"authors": [
-		"Me!"
+		"JesusMRS05"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/JesusMRS05/fair-vanilla-easy-place",
+		"sources": "https://github.com/JesusMRS05/fair-vanilla-easy-place"
 	},
-	"license": "CC0-1.0",
+	"license": "GPL-3.0-only",
 	"icon": "assets/fair-vanilla-easy-place/icon.png",
-	"environment": "*",
+	"environment": "client",
 	"entrypoints": {
-		"main": [
-			"com.github.jesusmrs05.FairVanillaEasyPlace"
-		],
 		"client": [
 			"com.github.jesusmrs05.client.FairVanillaEasyPlaceClient"
+		],
+		"modmenu": [
+			"com.github.jesusmrs05.client.config.FairVanillaEasyPlaceModMenu"
 		]
 	},
 	"mixins": [
@@ -33,6 +33,9 @@
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.2",
 		"java": ">=25",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"litematica": "*",
+		"malilib": "*",
+		"modmenu": "*"
 	}
 }
