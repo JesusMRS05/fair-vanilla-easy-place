@@ -1,5 +1,6 @@
 package com.github.jesusmrs05.client;
 
+import com.github.jesusmrs05.client.config.FairVanillaEasyPlaceConfig;
 import com.github.jesusmrs05.client.provider.BlockPlacementProvider;
 import com.github.jesusmrs05.client.provider.InputProvider;
 import com.github.jesusmrs05.client.provider.InteractionProvider;
@@ -11,14 +12,13 @@ import com.github.jesusmrs05.client.provider.ReachProvider;
 import com.github.jesusmrs05.client.provider.TargetProvider;
 import com.github.jesusmrs05.client.provider.WorldProvider;
 import com.github.jesusmrs05.client.target.SchematicTarget;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 
 /**
  * Connects the providers into the automated-but-vanilla-bound
@@ -26,9 +26,8 @@ import net.minecraft.network.chat.Component;
  */
 public final class AutoPlaceController {
 
-    private static final Item SCAFFOLD_ITEM = Items.OAK_PLANKS;
-
     private final Minecraft client;
+    private final FairVanillaEasyPlaceConfig config;
 
     private final InputProvider inputProvider;
     private final LitematicaProvider litematicaProvider;
@@ -42,8 +41,12 @@ public final class AutoPlaceController {
 
     private boolean enabled = false;
 
-    public AutoPlaceController(Minecraft client) {
+    public AutoPlaceController(
+            Minecraft client,
+            FairVanillaEasyPlaceConfig config
+    ) {
         this.client = client;
+        this.config = config;
 
         this.inputProvider =
                 new InputProvider(client);
@@ -86,20 +89,25 @@ public final class AutoPlaceController {
         enabled = !enabled;
 
         Component message = Component.literal(
-                        "Fair Vanilla Easy Place "
-                ).withStyle(ChatFormatting.WHITE)
-                .append(
-                        Component.literal(enabled ? "ON" : "OFF")
-                                .withStyle(
-                                        ChatFormatting.BOLD,
-                                        enabled
-                                                ? ChatFormatting.GREEN
-                                                : ChatFormatting.RED
-                                )
-                );
+                "Fair Vanilla Easy Place "
+        ).withStyle(
+                ChatFormatting.WHITE
+        ).append(
+                Component.literal(
+                        enabled ? "ON" : "OFF"
+                ).withStyle(
+                        ChatFormatting.BOLD,
+                        enabled
+                                ? ChatFormatting.GREEN
+                                : ChatFormatting.RED
+                )
+        );
 
-        if (client != null && client.player != null) {
-            client.player.sendSystemMessage(message);
+        if (client != null
+                && client.player != null) {
+            client.player.sendSystemMessage(
+                    message
+            );
         }
     }
 
@@ -132,7 +140,9 @@ public final class AutoPlaceController {
         BlockPos ghostPos =
                 target.ghostPos();
 
-        if (!placementStateProvider.isGhost(ghostPos)) {
+        if (!placementStateProvider.isGhost(
+                ghostPos
+        )) {
             return;
         }
 
@@ -141,21 +151,18 @@ public final class AutoPlaceController {
 
         BlockPos placementPos =
                 hitResult.getBlockPos()
-                        .relative(hitResult.getDirection());
+                        .relative(
+                                hitResult.getDirection()
+                        );
 
         Item requiredItem;
 
-        /*
-         * Direct placement:
-         *
-         * The vanilla interaction would place the block
-         * directly in the schematic ghost position.
-         */
         if (placementPos.equals(ghostPos)) {
             BlockState schematicState =
-                    litematicaProvider.getSchematicBlockState(
-                            ghostPos
-                    );
+                    litematicaProvider
+                            .getSchematicBlockState(
+                                    ghostPos
+                            );
 
             if (schematicState == null
                     || schematicState.isAir()) {
@@ -166,35 +173,29 @@ public final class AutoPlaceController {
                     schematicState.getBlock().asItem();
 
             if (requiredItem == null
-                    || requiredItem == Items.AIR) {
+                    || requiredItem
+                    == net.minecraft.world.item.Items.AIR) {
                 return;
             }
         } else {
-            /*
-             * Scaffold placement:
-             *
-             * The real vanilla interaction would place a block
-             * somewhere before the schematic ghost. For now we
-             * deliberately use oak planks as the scaffold block.
-             */
-            requiredItem = SCAFFOLD_ITEM;
+            requiredItem =
+                    config.getScaffoldItem();
         }
 
         InventoryProvider inventoryProvider =
-                new InventoryProvider(client.player);
+                new InventoryProvider(
+                        client.player
+                );
 
-        /*
-         * The required item must exist in the inventory.
-         */
-        if (!inventoryProvider.contains(requiredItem)) {
+        if (!inventoryProvider.contains(
+                requiredItem
+        )) {
             return;
         }
 
-        /*
-         * If the required item is not currently held, select/swap it
-         * and stop here. The actual placement happens on the next tick.
-         */
-        if (!inventoryProvider.isSelected(requiredItem)) {
+        if (!inventoryProvider.isSelected(
+                requiredItem
+        )) {
             selectRequiredItem(
                     inventoryProvider,
                     requiredItem
@@ -203,10 +204,9 @@ public final class AutoPlaceController {
             return;
         }
 
-        /*
-         * The actual interaction is still completely vanilla.
-         */
-        blockPlacementProvider.place(hitResult);
+        blockPlacementProvider.place(
+                hitResult
+        );
     }
 
     private void selectRequiredItem(
@@ -214,14 +214,18 @@ public final class AutoPlaceController {
             Item requiredItem
     ) {
         int slot =
-                inventoryProvider.findSlot(requiredItem);
+                inventoryProvider.findSlot(
+                        requiredItem
+                );
 
         if (slot < 0) {
             return;
         }
 
         if (slot <= 8) {
-            inventoryActionProvider.selectHotbarSlot(slot);
+            inventoryActionProvider
+                    .selectHotbarSlot(slot);
+
             return;
         }
 
@@ -232,9 +236,10 @@ public final class AutoPlaceController {
             return;
         }
 
-        inventoryActionProvider.swapInventorySlotWithHotbar(
-                slot,
-                currentHotbarSlot
-        );
+        inventoryActionProvider
+                .swapInventorySlotWithHotbar(
+                        slot,
+                        currentHotbarSlot
+                );
     }
 }

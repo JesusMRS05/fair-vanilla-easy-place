@@ -1,5 +1,6 @@
 package com.github.jesusmrs05.client;
 
+import com.github.jesusmrs05.client.config.FairVanillaEasyPlaceConfig;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -25,9 +26,13 @@ public final class FairVanillaEasyPlaceClient
 
 	private static KeyMapping toggleKey;
 	private static AutoPlaceController controller;
+	private static FairVanillaEasyPlaceConfig config;
 
 	@Override
 	public void onInitializeClient() {
+		config =
+				FairVanillaEasyPlaceConfig.load();
+
 		toggleKey = KeyMappingHelper.registerKeyMapping(
 				new KeyMapping(
 						TOGGLE_KEY,
@@ -38,7 +43,8 @@ public final class FairVanillaEasyPlaceClient
 		);
 
 		controller = new AutoPlaceController(
-				Minecraft.getInstance()
+				Minecraft.getInstance(),
+				config
 		);
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -51,6 +57,11 @@ public final class FairVanillaEasyPlaceClient
 	}
 
 	public static boolean isPlacementEnabled() {
-		return controller != null && controller.isEnabled();
+		return controller != null
+				&& controller.isEnabled();
+	}
+
+	public static FairVanillaEasyPlaceConfig getConfig() {
+		return config;
 	}
 }
