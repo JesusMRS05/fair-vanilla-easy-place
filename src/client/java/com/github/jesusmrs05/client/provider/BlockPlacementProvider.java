@@ -14,10 +14,6 @@ public final class BlockPlacementProvider {
     }
 
     public InteractionResult place(BlockHitResult hitResult) {
-        if (hitResult == null) {
-            return InteractionResult.PASS;
-        }
-
-        return interactionProvider.useMainHand(hitResult);
+        return interactionProvider.placeBlock(hitResult);
     }
 }

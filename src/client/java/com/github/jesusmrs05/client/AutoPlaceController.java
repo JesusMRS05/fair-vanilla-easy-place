@@ -87,15 +87,13 @@ public final class AutoPlaceController {
      * uses this to let our own placement through while cancelling every
      * other (i.e. vanilla click-driven) block interaction attempt.
      */
-    public boolean isIssuingControlledInteraction() {
-        return interactionProvider.isIssuingControlledInteraction();
-    }
+
 
     /**
      * Call once per client tick. While enabled, this method is the sole
      * source of real placements: a {@code UseBlockCallback} registered in
      * the client entrypoint cancels every right-click-on-block attempt
-     * that doesn't come from {@link #isIssuingControlledInteraction()},
+     * that doesn't come from {@link #()},
      * so vanilla's own click-driven placement never goes through on its
      * own — only a placement that has passed every check below
      * (target, ghost state, inventory, selection) does.
