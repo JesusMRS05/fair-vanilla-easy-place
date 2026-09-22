@@ -11,21 +11,23 @@ import net.minecraft.world.phys.Vec3;
 public final class TargetProvider {
 
     private final Minecraft client;
-    private final LitematicaProvider litematicaProvider;
+    private final PlacementStateProvider placementStateProvider;
     private final ReachProvider reachProvider;
 
     public TargetProvider(
             Minecraft client,
-            LitematicaProvider litematicaProvider,
+            PlacementStateProvider placementStateProvider,
             ReachProvider reachProvider
     ) {
         this.client = client;
-        this.litematicaProvider = litematicaProvider;
+        this.placementStateProvider = placementStateProvider;
         this.reachProvider = reachProvider;
     }
 
     public SchematicTarget findTarget() {
-        if (client == null || client.player == null || client.level == null) {
+        if (client == null
+                || client.player == null
+                || client.level == null) {
             return null;
         }
 
@@ -34,7 +36,11 @@ public final class TargetProvider {
         Vec3 start = player.getEyePosition(1.0F);
         double reach = reachProvider.getBlockInteractionRange();
 
-        HitResult result = player.pick(reach, 1.0F, false);
+        HitResult result = player.pick(
+                reach,
+                1.0F,
+                false
+        );
 
         if (!(result instanceof BlockHitResult hitResult)
                 || result.getType() != HitResult.Type.BLOCK) {
@@ -43,7 +49,8 @@ public final class TargetProvider {
 
         BlockPos ghostPos = findFurthestGhost(
                 start,
-                hitResult.getLocation()
+                hitResult.getLocation(),
+                hitResult.getBlockPos()
         );
 
         if (ghostPos == null) {
@@ -56,7 +63,11 @@ public final class TargetProvider {
         );
     }
 
-    private BlockPos findFurthestGhost(Vec3 start, Vec3 end) {
+    private BlockPos findFurthestGhost(
+            Vec3 start,
+            Vec3 end,
+            BlockPos obstructionPos
+    ) {
         Vec3 direction = end.subtract(start);
 
         double length = direction.length();
@@ -79,9 +90,23 @@ public final class TargetProvider {
         int stepY = direction.y > 0.0D ? 1 : -1;
         int stepZ = direction.z > 0.0D ? 1 : -1;
 
-        double tMaxX = firstBoundary(x, blockX, direction.x);
-        double tMaxY = firstBoundary(y, blockY, direction.y);
-        double tMaxZ = firstBoundary(z, blockZ, direction.z);
+        double tMaxX = firstBoundary(
+                x,
+                blockX,
+                direction.x
+        );
+
+        double tMaxY = firstBoundary(
+                y,
+                blockY,
+                direction.y
+        );
+
+        double tMaxZ = firstBoundary(
+                z,
+                blockZ,
+                direction.z
+        );
 
         double tDeltaX = direction.x == 0.0D
                 ? Double.POSITIVE_INFINITY
@@ -107,8 +132,15 @@ public final class TargetProvider {
                     blockZ
             );
 
+            // Never consider the real block that stopped the ray
+            // to be a schematic ghost. Ghosts must exist before
+            // the first real-world obstruction.
+            if (currentPos.equals(obstructionPos)) {
+                break;
+            }
+
             if (currentT > 0.0D
-                    && litematicaProvider.hasSchematicBlock(currentPos)) {
+                    && placementStateProvider.isGhost(currentPos)) {
                 furthestGhost = currentPos;
             }
 
@@ -148,10 +180,12 @@ public final class TargetProvider {
         }
 
         if (direction > 0.0D) {
-            return (blockCoordinate + 1.0D - coordinate) / direction;
+            return (blockCoordinate + 1.0D - coordinate)
+                    / direction;
         }
 
-        return (blockCoordinate - coordinate) / direction;
+        return (blockCoordinate - coordinate)
+                / direction;
     }
 
     private static int floor(double value) {
